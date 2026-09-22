@@ -26,6 +26,7 @@
   --cool:#0A9BD0; --cool-soft:rgba(10,155,208,.14);
   --good:#178F5F; --good-soft:rgba(23,143,95,.14); --warn:#C98A00; --warn-soft:rgba(201,138,0,.16); --bad:#D3304F; --bad-soft:rgba(211,48,79,.14);
   --shadow:0 12px 32px rgba(20,26,43,.10), 0 1px 2px rgba(20,26,43,.06);
+  --sil:rgba(20,26,43,.09); --musc:rgba(20,26,43,.17);
   --r:22px; --r-sm:14px;
   --font-body:'Be Vietnam Pro',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --font-display:'Barlow Condensed','Arial Narrow',system-ui,sans-serif;
@@ -41,6 +42,7 @@
     --cool:#38CFFF; --cool-soft:rgba(56,207,255,.16);
     --good:#3DDC97; --good-soft:rgba(61,220,151,.16); --warn:#FFC857; --warn-soft:rgba(255,200,87,.18); --bad:#FF5470; --bad-soft:rgba(255,84,112,.18);
     --shadow:0 14px 40px rgba(0,0,0,.38), 0 1px 2px rgba(0,0,0,.3);
+    --sil:rgba(255,255,255,.09); --musc:rgba(255,255,255,.18);
   }
 }
 :root[data-theme="dark"]{
@@ -53,6 +55,7 @@
   --cool:#38CFFF; --cool-soft:rgba(56,207,255,.16);
   --good:#3DDC97; --good-soft:rgba(61,220,151,.16); --warn:#FFC857; --warn-soft:rgba(255,200,87,.18); --bad:#FF5470; --bad-soft:rgba(255,84,112,.18);
   --shadow:0 14px 40px rgba(0,0,0,.38), 0 1px 2px rgba(0,0,0,.3);
+  --sil:rgba(255,255,255,.09); --musc:rgba(255,255,255,.18);
 }
 *{box-sizing:border-box}
 html,body{height:100%}
@@ -225,6 +228,16 @@ input[type=number]{width:80px;text-align:center}
 .cues{display:flex;flex-direction:column;gap:8px}
 .cue{display:flex;gap:10px;font-size:14px;line-height:1.4}
 .cue .b{width:22px;height:22px;border-radius:8px;background:var(--accent-soft);color:var(--accent);display:grid;place-items:center;font-family:var(--font-display);font-weight:700;font-size:13px;flex:0 0 auto;margin-top:1px}
+.cue .b.warn{background:var(--warn-soft);color:var(--warn)}
+.body{width:100%;max-width:320px;height:auto;display:block;margin:0 auto}
+.body .sil{fill:var(--sil)}
+.body .m{fill:var(--musc);stroke:var(--bg);stroke-width:1}
+.body .m.p{fill:var(--accent)}
+.body .m.s{fill:var(--accent);opacity:.42}
+.body text{font-family:var(--font-body);font-size:11px;fill:var(--ink3);letter-spacing:.06em;text-transform:uppercase}
+.legend{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.legend .pill i{width:9px;height:9px;border-radius:50%;background:var(--accent);display:inline-block}
+.legend .pill.sec i{opacity:.42}
 
 /* Workout screen */
 .workout{position:fixed;inset:0;z-index:25;overflow-y:auto;background:var(--bg);animation:fade .25s ease}
@@ -264,6 +277,7 @@ input[type=number]{width:80px;text-align:center}
 </style>
 </head>
 <body>
+
 
 <div class="ambient" aria-hidden="true"><div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div></div>
 
@@ -387,6 +401,66 @@ const SPLITS={
   fb:{name:'Full Body',days:'3 buổi/tuần',desc:'Toàn thân mỗi buổi, hiệu quả khi chỉ có 3 ngày rảnh.',sessions:['fbA','fbB','fbC'],ideal:[3,3]}
 };
 const RECOMMEND={hypertrophy:'ppl',cut:'ppl',strength:'ul',general:'ul'};
+// Nhóm cơ: [chính], [phụ]
+const MUSCLE_NAME={traps:'Cầu vai / lưng trên',delt_front:'Vai trước',delt_side:'Vai giữa',delt_rear:'Vai sau',chest:'Ngực',biceps:'Tay trước',triceps:'Tay sau',forearms:'Cẳng tay',abs:'Bụng',obliques:'Liên sườn',lats:'Xô',lower_back:'Lưng dưới',glutes:'Mông',quads:'Đùi trước',hamstrings:'Đùi sau',calves:'Bắp chân'};
+const MUSCLES={
+bench_press:[['chest'],['delt_front','triceps']],incline_db_press:[['chest'],['delt_front','triceps']],cable_fly:[['chest'],['delt_front']],pec_deck:[['chest'],['delt_front']],chest_dips:[['chest','triceps'],['delt_front']],machine_chest_press:[['chest'],['triceps','delt_front']],
+deadlift:[['lower_back','glutes','hamstrings'],['traps','lats','quads','forearms']],barbell_row:[['lats','traps'],['delt_rear','biceps','lower_back']],pull_up:[['lats'],['biceps','traps','forearms']],lat_pulldown:[['lats'],['biceps','delt_rear']],seated_cable_row:[['lats','traps'],['biceps','delt_rear']],db_row:[['lats'],['biceps','delt_rear','obliques']],chest_supported_row:[['traps','lats'],['delt_rear','biceps']],face_pull:[['delt_rear','traps'],['delt_side']],
+ohp:[['delt_front','delt_side'],['triceps','traps','abs']],db_shoulder_press:[['delt_front','delt_side'],['triceps']],lateral_raise:[['delt_side'],['traps']],rear_delt_fly:[['delt_rear'],['traps']],cable_lateral_raise:[['delt_side'],['delt_front']],
+barbell_curl:[['biceps'],['forearms']],incline_db_curl:[['biceps'],['forearms']],hammer_curl:[['biceps','forearms'],[]],preacher_curl:[['biceps'],['forearms']],
+tricep_pushdown:[['triceps'],[]],overhead_extension:[['triceps'],[]],skull_crusher:[['triceps'],[]],close_grip_bench:[['triceps'],['chest','delt_front']],
+squat:[['quads','glutes'],['hamstrings','lower_back','abs']],rdl:[['hamstrings','glutes'],['lower_back']],leg_press:[['quads'],['glutes','hamstrings']],bulgarian_split_squat:[['quads','glutes'],['hamstrings']],leg_extension:[['quads'],[]],leg_curl:[['hamstrings'],['calves']],hip_thrust:[['glutes'],['hamstrings']],calf_raise:[['calves'],[]],hack_squat:[['quads'],['glutes']],
+hanging_leg_raise:[['abs'],['obliques','forearms']],cable_crunch:[['abs'],['obliques']],plank:[['abs'],['obliques','glutes']],ab_wheel:[['abs'],['lats','obliques']]
+};
+// Lỗi thường gặp
+const MISTAKES={
+bench_press:['Bật mông khỏi ghế khi đẩy nặng – mất ổn định, dễ đau lưng dưới','Khuỷu tay xoè 90° ngang vai – dồn áp lực lên khớp vai','Nảy đòn lên ngực để lấy đà thay vì kiểm soát pha hạ'],
+incline_db_press:['Dựng ghế quá cao (>45°) – bài biến thành đẩy vai','Hạ tạ quá sâu khiến vai bị kéo căng quá mức','Chạm hai tạ vào nhau ở đỉnh rồi thả lỏng – mất căng cơ ngực'],
+cable_fly:['Gập khuỷu tay quá nhiều – thành bài đẩy chứ không phải ép ngực','Dùng tạ nặng rồi kéo bằng vai và tay','Thả tay về quá nhanh, để tạ kéo vai ra sau quá xa'],
+pec_deck:['Chỉnh ghế sai khiến tay cầm ngang vai – dồn lực lên vai trước','Ưỡn lưng, nhấc lưng khỏi đệm để đẩy nặng hơn','Để tạ chạm chồng giữa các rep – mất căng liên tục'],
+chest_dips:['Giữ thân thẳng đứng – tay sau làm hết việc, ngực ít tác động','Hạ quá sâu khi vai chưa đủ dẻo – rủi ro chấn thương vai','Nhún đà bằng chân hoặc khoá khớp mạnh ở đỉnh'],
+machine_chest_press:['Ghế quá cao/thấp làm tay cầm lệch khỏi giữa ngực','Khoá khớp và nghỉ ở cuối hành trình mỗi rep','Nhấc vai lên khi đẩy – vai gánh thay ngực'],
+deadlift:['Đòn rời xa ống chân – lưng dưới chịu tải gấp nhiều lần','Hông bật lên trước, lưng làm đòn bẩy','Ngả người quá mức ở đỉnh, ưỡn lưng dưới'],
+barbell_row:['Đứng quá thẳng và dùng đà hông giật tạ','Kéo đòn về ngực thay vì bụng dưới – vai trước và tay trước gánh','Lưng tròn ở các rep cuối khi đã mệt'],
+pull_up:['Đung đưa (kipping) để lấy đà','Không hạ hết tầm, chỉ làm nửa trên','Nhún vai lên tai thay vì kéo bả vai xuống'],
+lat_pulldown:['Kéo thanh ra sau gáy – hại vai và cổ','Ngả người ra sau quá nhiều, thành bài chèo','Kéo bằng tay trước, không khoá bả vai'],
+seated_cable_row:['Gập lưng theo tạ khi thả về rồi giật lên bằng lưng dưới','Nhún vai và co cổ khi kéo','Tạ quá nặng nên hành trình ngắn, không siết được bả vai'],
+db_row:['Xoay thân để nâng tạ nặng hơn','Kéo tạ lên nách thay vì về hông','Lưng gù, không giữ trung tính'],
+chest_supported_row:['Nhấc ngực khỏi đệm để dùng đà','Kéo bằng tay, khuỷu xoè ra ngoài','Thả tạ rơi nhanh, không kiểm soát pha hạ'],
+face_pull:['Tạ nặng nên phải kéo bằng thân và tay trước','Kéo về cổ thay vì trán, khuỷu tay thấp hơn vai','Không xoay vai ra ngoài ở cuối hành trình'],
+ohp:['Ưỡn lưng dưới quá mức, thành bài đẩy ngực nghiêng','Đòn đi vòng ra trước mặt thay vì đi thẳng lên','Không siết mông và bụng, thân lắc lư'],
+db_shoulder_press:['Hạ tạ thấp hơn ngang tai – căng khớp vai','Ghế dựng thẳng 90° khiến phải ưỡn lưng để đẩy','Hai tạ lệch nhịp, bên yếu đi chậm hơn'],
+lateral_raise:['Nhún người, dùng đà để vung tạ nặng','Nâng cao quá vai – cầu vai gánh','Cổ tay cao hơn khuỷu tay (tư thế đổ nước) gây căng vai'],
+rear_delt_fly:['Siết bả vai quá mạnh nên lưng trên làm thay vai sau','Dùng đà hông hoặc lưng để đưa tạ','Tay cầm chỉnh sai độ cao'],
+cable_lateral_raise:['Đứng quá gần cột cáp, hành trình bị cản','Nghiêng người ngược lại để nâng tạ nặng','Hạ tạ quá nhanh, mất căng liên tục'],
+barbell_curl:['Đung đưa thân, dùng lưng dưới để cuốn','Khuỷu tay chạy ra trước, vai trước gánh','Không duỗi hết tầm ở dưới'],
+incline_db_curl:['Ghế quá thấp làm vai bị căng, mất kiểm soát','Nhấc khuỷu tay lên trước khi cuốn','Cuốn nhanh, bỏ qua pha hạ'],
+hammer_curl:['Vung tạ bằng vai','Cuốn quá cao, cẳng tay chạm vai và mất căng','Cầm tạ quá nặng nên hành trình ngắn'],
+preacher_curl:['Duỗi khoá khớp hoàn toàn với tạ nặng – dễ chấn thương gân','Nhấc khuỷu và nách khỏi đệm','Tạ rơi tự do ở pha hạ'],
+tricep_pushdown:['Khuỷu tay xoè ra và chạy về trước','Đổ người đè lên tạ để đẩy nặng hơn','Không duỗi thẳng hết tay ở dưới'],
+overhead_extension:['Khuỷu tay xoè rộng, vai gánh','Ưỡn lưng dưới khi tạ nặng','Hạ tạ không đủ sâu sau gáy'],
+skull_crusher:['Khuỷu tay xoè ra hai bên','Hạ đòn xuống trán với tạ quá nặng – nguy hiểm','Dùng vai đẩy đòn lên (thành bài đẩy)'],
+close_grip_bench:['Cầm quá hẹp (dưới 20 cm) gây đau cổ tay','Khuỷu tay xoè như bench thường','Nảy đòn trên ngực'],
+squat:['Gối chụm vào trong khi đứng lên','Gót chân nhấc, dồn trọng tâm lên mũi chân','Gập lưng, ngực đổ trước, hông bật lên sớm'],
+rdl:['Gập gối quá nhiều, thành squat','Đòn rời xa chân, lưng dưới chịu tải','Lưng tròn khi hạ sâu quá tầm dẻo'],
+leg_press:['Hạ quá sâu, lưng dưới bật khỏi ghế','Khoá gối mạnh ở đỉnh với tạ nặng','Chân đặt quá thấp trên bàn đạp gây căng gối'],
+bulgarian_split_squat:['Chân trước đặt quá gần ghế – gối vượt xa mũi chân','Gối chân trước đổ vào trong','Dùng chân sau đẩy thay vì chân trước'],
+leg_extension:['Duỗi bật mạnh với tạ nặng – hại gối','Nhấc mông khỏi ghế','Thả tạ rơi ở pha hạ'],
+leg_curl:['Nhấc hông khỏi đệm khi cuốn','Cuốn quá nhanh, dùng đà','Đệm đặt sai vị trí (ở bắp chân)'],
+hip_thrust:['Ưỡn lưng dưới ở đỉnh thay vì siết mông','Đặt chân quá xa – đùi sau làm thay mông','Cằm ngẩng, mắt nhìn trần'],
+calf_raise:['Nhún đà nhanh, hành trình ngắn','Không hạ gót hết tầm','Gập gối để đẩy tạ nặng hơn'],
+hack_squat:['Chân đặt quá thấp trên bàn đạp – gối chịu tải lớn','Không xuống đủ sâu','Khoá gối ở đỉnh'],
+hanging_leg_raise:['Đung đưa để lấy đà','Chỉ nâng chân bằng hông, không cuộn xương chậu','Vai thả lỏng, treo bằng dây chằng'],
+cable_crunch:['Kéo bằng tay và lưng thay vì gập bụng','Ngồi lên gót chân, hông chuyển động','Tạ quá nặng, hành trình ngắn'],
+plank:['Hông võng xuống hoặc nhô cao','Nín thở','Đầu ngẩng, cổ căng'],
+ab_wheel:['Võng lưng dưới khi lăn ra','Gập hông thay vì mở hông','Lăn quá xa khi chưa đủ khoẻ']
+};
+// Sơ đồ cơ thể (mặt trước / mặt sau): hình bên trái + đối xứng
+const BODY_SIL=['<circle cx="100" cy="30" r="22"/>','<rect x="91" y="48" width="18" height="24"/>','<path d="M60 70 L140 70 L134 130 L128 202 L100 210 L72 202 L66 130 Z"/>',{m:'<path d="M62 70 Q46 76 44 96 L36 150 L30 214 L46 216 L54 152 L66 100 Z"/>'},{m:'<path d="M72 200 L100 206 L100 250 L96 300 L92 404 L70 404 L66 300 L64 250 Z"/>'}];
+const BODY_MUSCLES={
+front:[['traps','<path d="M88 58 L112 58 L140 72 L60 72 Z"/>',0],['delt_front','<ellipse cx="66" cy="84" rx="9" ry="11"/>',1],['delt_side','<ellipse cx="53" cy="87" rx="8" ry="12"/>',1],['chest','<path d="M70 78 Q100 76 100 82 L100 118 Q86 124 76 118 Q66 106 70 78 Z"/>',1],['biceps','<ellipse cx="50" cy="124" rx="9" ry="22"/>',1],['forearms','<ellipse cx="40" cy="182" rx="7" ry="26"/>',1],['abs','<path d="M88 124 L112 124 L112 194 Q100 202 88 194 Z"/>',0],['obliques','<path d="M72 124 L86 124 L86 194 L78 198 L69 150 Z"/>',1],['quads','<ellipse cx="84" cy="258" rx="15" ry="50"/>',1]],
+back:[['traps','<path d="M100 56 L142 74 L100 132 L58 74 Z"/>',0],['delt_rear','<ellipse cx="66" cy="84" rx="9" ry="11"/>',1],['delt_side','<ellipse cx="53" cy="87" rx="8" ry="12"/>',1],['lats','<path d="M62 96 L84 116 L92 134 L92 176 L82 192 L64 160 Z"/>',1],['lower_back','<path d="M90 136 L110 136 L112 202 L88 202 Z"/>',0],['triceps','<ellipse cx="50" cy="124" rx="9" ry="22"/>',1],['forearms','<ellipse cx="40" cy="182" rx="7" ry="26"/>',1],['glutes','<ellipse cx="84" cy="216" rx="16" ry="18"/>',1],['hamstrings','<ellipse cx="84" cy="280" rx="14" ry="44"/>',1],['calves','<ellipse cx="84" cy="358" rx="11" ry="32"/>',1]]
+};
 const REST_TIPS=['Ngủ 7–9 tiếng: hormone tăng trưởng tiết mạnh nhất khi ngủ sâu.','Đi bộ nhẹ 20–30 phút giúp máu lưu thông, giảm đau cơ.','Protein 1.6–2.2 g/kg thể trọng, chia đều 4–5 bữa.','Giãn cơ hoặc foam roll 10 phút cho nhóm cơ vừa tập hôm qua.','Uống đủ nước: 35–40 ml/kg thể trọng mỗi ngày.'];
 </script>
 
@@ -595,6 +669,15 @@ function videoHTML(ex){
   if(S.videoBlocked)return '<div class="video"><div class="fallback"><div style="font-weight:700">'+esc(ex.name)+' – '+esc(ex.channel)+'</div><a class="btn cool" href="'+link+'" target="_blank" rel="noopener">'+ICON.video+'Mở video trên YouTube</a></div></div>';
   return '<div class="video"><iframe src="https://www.youtube-nocookie.com/embed/'+ex.video+'?rel=0&modestbranding=1" title="'+esc(ex.name)+' – '+esc(ex.channel)+'" allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen loading="lazy" referrerpolicy="strict-origin-when-cross-origin"></iframe></div>';
 }
+/* ================= SƠ ĐỒ NHÓM CƠ ================= */
+const MIRROR='<g transform="translate(200,0) scale(-1,1)">';
+function muscleSVG(key){
+  const [pr,sc]=MUSCLES[key]||[[],[]];
+  const view=v=>{let o='<g class="sil">'+BODY_SIL.map(x=>typeof x==='string'?x:x.m+MIRROR+x.m+'</g>').join('')+'</g>';
+    BODY_MUSCLES[v].forEach(([id,shape,mir])=>{const cls='m'+(pr.includes(id)?' p':sc.includes(id)?' s':'');const el=shape.replace(/^<(\w+)/,'<$1 class="'+cls+'"');o+=el;if(mir)o+=MIRROR+el+'</g>'});return o};
+  return '<svg class="body" viewBox="0 0 400 424" role="img" aria-label="Nhóm cơ tác động"><g>'+view('front')+'</g><g transform="translate(200,0)">'+view('back')+'</g><text x="100" y="420" text-anchor="middle">Mặt trước</text><text x="300" y="420" text-anchor="middle">Mặt sau</text></svg>';
+}
+function muscleLegend(key){const [pr,sc]=MUSCLES[key]||[[],[]];return '<div class="legend">'+pr.map(m=>'<span class="pill accent"><i></i>'+esc(MUSCLE_NAME[m])+'</span>').join('')+sc.map(m=>'<span class="pill sec"><i></i>'+esc(MUSCLE_NAME[m])+'</span>').join('')+'</div>'}
 function openExercise(key,ctx){
   const ex=EX[key];const b=bestFor(key);const last=lastPerf(key);
   const hist=S.sessions.filter(s=>s.ex.some(e=>e.key===key&&e.sets.some(st=>st.done))).slice(0,4).map(s=>{const e=s.ex.find(x=>x.key===key);return '<div class="kv"><span class="faint">'+fmtDate(s.date)+' · '+esc(s.name)+'</span><b class="num">'+e.sets.filter(st=>st.done).map(st=>(ex.time?st.r+'s':(ex.bw?(st.w?'+'+fmtKg(st.w):'BW'):fmtKg(st.w||0))+'×'+st.r)).join(', ')+'</b></div>'}).join('');
@@ -602,7 +685,9 @@ function openExercise(key,ctx){
   const addBtn=S.active&&!S.active.ex.some(e=>e.key===key)?'<button class="btn cool block" data-act="addToWorkout" data-key="'+key+'" style="margin-top:14px">'+ICON.plus+'Thêm vào buổi tập đang diễn ra</button>':'';
   openSheet('<div class="row between" style="margin-bottom:10px"><div class="grow"><div class="eyebrow">'+esc(GROUPS[ex.group])+' · '+esc(ex.equip)+'</div><h2>'+esc(ex.name)+'</h2><p class="small muted">'+esc(ex.vi)+'</p></div><button class="iconbtn" data-act="closeSheet" aria-label="Đóng">'+ICON.x+'</button></div>'+videoHTML(ex)+'<div class="row between" style="margin:8px 0 14px"><span class="tiny faint">Hướng dẫn: '+esc(ex.channel)+'</span><a class="tiny" href="https://www.youtube.com/watch?v='+ex.video+'" target="_blank" rel="noopener">Mở trên YouTube ↗</a></div>'+
     '<div class="glass2" style="padding:12px 14px;margin-bottom:12px"><div class="eyebrow" style="margin-bottom:6px">Mục tiêu hôm nay · '+esc(GOALS[S.settings.goal].name)+'</div><div style="font-weight:600">'+targetText(key,roleInTpl)+'</div>'+(b?'<div class="small muted" style="margin-top:4px">Tốt nhất: '+(ex.time?b.r+' giây':(ex.bw?(b.w?'+'+fmtKg(b.w)+' kg':'bodyweight')+' × '+b.r:fmtKg(b.w)+' kg × '+b.r+' (1RM ước tính '+fmtKg(b.v)+' kg)'))+' · '+fmtDate(b.date)+'</div>':'<div class="small faint" style="margin-top:4px">Chưa có dữ liệu – ghi set đầu tiên hôm nay.</div>')+'</div>'+
+    '<div class="glass2" style="padding:12px 14px;margin-bottom:12px"><div class="eyebrow" style="margin-bottom:8px">Nhóm cơ tác động</div>'+muscleSVG(key)+muscleLegend(key)+'</div>'+
     '<div class="eyebrow" style="margin-bottom:8px">Kỹ thuật</div><div class="cues">'+ex.cues.map((c,i)=>'<div class="cue"><span class="b">'+(i+1)+'</span><span>'+esc(c)+'</span></div>').join('')+'</div>'+
+    (MISTAKES[key]?'<div class="eyebrow" style="margin:16px 0 8px">Lỗi thường gặp</div><div class="cues">'+MISTAKES[key].map(m=>'<div class="cue"><span class="b warn">!</span><span>'+esc(m)+'</span></div>').join('')+'</div>':'')+
     (hist?'<div class="eyebrow" style="margin:16px 0 8px">Gần đây</div><div class="list-plain">'+hist+'</div>':'')+addBtn);
 }
 
