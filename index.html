@@ -515,6 +515,7 @@ function renderHome(){
     '<div class="glass card"><div class="row between" style="margin-bottom:12px"><div><div class="eyebrow">Tuần này</div><h3 style="margin-top:2px">'+doneW+'/'+planned+' buổi</h3></div>'+ring(planned?doneW/planned:0)+'</div><div class="week">'+week+'</div></div>'+
     '<div class="stats"><div class="glass stat"><div class="v num">'+fmtKg(volW/1000)+'</div><div class="l">tấn tuần này</div></div><div class="glass stat"><div class="v num">'+streakWeeks()+'</div><div class="l">tuần liên tiếp</div></div><div class="glass stat"><div class="v num">'+S.sessions.length+'</div><div class="l">buổi đã ghi</div></div></div>'+
     '<div class="glass card"><div class="row between"><div class="grow"><div class="eyebrow">Buổi kế tiếp</div><div style="font-weight:600;margin-top:2px">'+(next||'Chưa có lịch – vào Lịch tập để chọn ngày')+'</div><div class="small faint" style="margin-top:4px">'+remind+'</div></div><button class="iconbtn" data-act="tab" data-tab="plan" aria-label="Mở lịch tập">'+ICON.bell+'</button></div></div>'+
+    (backupOverdue()?'<button class="glass card" data-act="exportData" style="text-align:left;width:100%"><div class="eyebrow" style="color:var(--warn)">Sao lưu dữ liệu</div><div class="small" style="margin-top:4px">'+(lastBackup()?'Đã hơn 2 tuần chưa sao lưu':'Bạn có '+S.sessions.length+' buổi tập chưa sao lưu')+' – bấm để lưu file vào Google Drive.</div></button>':'')+
     '<div class="glass card"><div class="eyebrow">Ghi chú HLV · '+esc(g.name)+'</div><p class="small muted" style="margin-top:6px">'+esc(g.note)+'</p></div></div>';
 }
 
@@ -541,7 +542,32 @@ function renderPlan(){
       '<div class="field"><div><label>Thông báo khi mở app</label><div class="hint">'+(notifState==='granted'?'Đã cho phép thông báo trình duyệt':notifState==='denied'?'Trình duyệt đang chặn thông báo – app sẽ hiện nhắc trong trang':'Nhắc trong trang; bật để xin quyền thông báo')+'</div></div><button class="switch '+(s.remind?'on':'')+'" data-act="toggleRemind" role="switch" aria-checked="'+(s.remind?'true':'false')+'" aria-label="Bật nhắc nhở"></button></div>'+
       '<div class="field"><div><label>Âm thanh & rung khi hết giờ nghỉ</label></div><button class="switch '+(s.sound?'on':'')+'" data-act="toggleSound" role="switch" aria-checked="'+(s.sound?'true':'false')+'" aria-label="Âm thanh"></button></div>'+
       '<div class="divider"></div><div class="eyebrow">Nhắc chắc chắn nhất: lịch trên điện thoại</div><p class="small muted">Thêm lịch lặp hằng tuần vào Google Calendar, điện thoại sẽ tự nhắc kể cả khi không mở app.</p><div class="list-plain">'+(cal||'<p class="small faint">Chọn ngày tập để tạo lịch.</p>')+'</div></div>'+
-    '<div class="glass card"><div class="eyebrow" style="margin-bottom:10px">Tuần này</div><div class="list-plain">'+overview+'</div></div></div>';
+    '<div class="glass card"><div class="eyebrow" style="margin-bottom:10px">Tuần này</div><div class="list-plain">'+overview+'</div></div>'+backupCard()+'</div>';
+}
+/* ================= SAO LƯU / KHÔI PHỤC (bản cài ngoài Claude) ================= */
+const STANDALONE=!(window.claude&&window.claude.use);
+function lastBackup(){try{return localStorage.getItem('klg_backup')||''}catch(e){return ''}}
+function backupOverdue(){if(!STANDALONE||S.sessions.length<3)return false;const lb=lastBackup();if(!lb)return true;return (Date.now()-new Date(lb).getTime())>14*86400000}
+function backupCard(){if(!STANDALONE)return '';const lb=lastBackup();return '<div class="glass card stack" style="gap:10px"><div class="eyebrow">Dữ liệu & sao lưu</div><p class="small muted">Dữ liệu lưu trong trình duyệt của máy này. Sao lưu ra file rồi cất vào Google Drive để không mất lịch sử khi đổi máy hoặc xoá dữ liệu trình duyệt.'+(lb?' Sao lưu gần nhất: '+fmtDate(lb.slice(0,10))+'/'+lb.slice(0,4)+'.':' Chưa sao lưu lần nào.')+'</p><div class="row"><button class="btn grow" data-act="exportData">Sao lưu ra file</button><button class="btn grow" data-act="importData">Khôi phục từ file</button></div><input type="file" id="f-import" accept="application/json,.json" data-act="importFile" hidden></div>'}
+async function exportData(){
+  const data={app:'ky-luat-gym',version:1,exportedAt:new Date().toISOString(),settings:S.settings,sessions:S.sessions,active:S.active};
+  const json=JSON.stringify(data);const name='ky-luat-gym-'+isoDate(new Date())+'.json';let shared=false;
+  try{const file=new File([json],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:'Sao lưu Kỷ Luật Gym'});shared=true}}catch(e){if(e&&e.name==='AbortError')return}
+  if(!shared){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([json],{type:'application/json'}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},3000)}
+  try{localStorage.setItem('klg_backup',new Date().toISOString())}catch(e){}
+  toast(shared?'Đã gửi file sao lưu – chọn "Lưu vào Drive"':'Đã tải file sao lưu');renderPlan();renderHome();
+}
+function importData(file){
+  const rd=new FileReader();
+  rd.onload=()=>{try{const o=JSON.parse(rd.result);if(!o||o.app!=='ky-luat-gym'||!Array.isArray(o.sessions))throw 0;
+    const fresh=S.sessions.length===0;const ids=new Set(S.sessions.map(s=>s.id));const added=o.sessions.filter(s=>s&&s.id&&!ids.has(s.id));
+    S.sessions=[...S.sessions,...added].sort((a,b)=>b.startedAt-a.startedAt);
+    if(fresh&&o.settings){S.settings={...DEFAULT_SETTINGS,...o.settings};S.settings.days={...DEFAULT_SETTINGS.days,...(S.settings.days||{})}}
+    if(!S.active&&o.active)S.active=o.active;
+    lsSave();added.forEach(s=>writeDoc('sessions/'+s.id,s));if(fresh)writeDoc('app/settings',S.settings);
+    renderAll();toast('Đã khôi phục: thêm '+added.length+' buổi tập'+(fresh?' và cài đặt':''))}
+  catch(e){toast('File không đúng định dạng sao lưu của app')}};
+  rd.readAsText(file);
 }
 function gcalLink(dk,name){const idx=DAY_KEYS.indexOf(dk);const now=new Date();let diff=(idx-dayIdx(now)+7)%7;const d=new Date(now);d.setDate(now.getDate()+diff);const [h,m]=S.settings.time.split(':').map(Number);d.setHours(h||18,m||0,0,0);if(d<now)d.setDate(d.getDate()+7);const f=x=>x.getFullYear()+pad(x.getMonth()+1)+pad(x.getDate())+'T'+pad(x.getHours())+pad(x.getMinutes())+'00';const end=new Date(d.getTime()+75*60000);const by=['MO','TU','WE','TH','FR','SA','SU'][idx];let tz='Asia/Ho_Chi_Minh';try{tz=Intl.DateTimeFormat().resolvedOptions().timeZone||tz}catch(e){}return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent('Gym: '+name)+'&dates='+f(d)+'/'+f(end)+'&recur='+encodeURIComponent('RRULE:FREQ=WEEKLY;BYDAY='+by)+'&details='+encodeURIComponent('Buổi '+name+' theo lịch Kỷ Luật Gym. Khởi động 8 phút trước khi vào bài chính.')+'&ctz='+encodeURIComponent(tz)}
 
@@ -727,12 +753,14 @@ document.addEventListener('click',e=>{
     case 'cancelWorkout':cancelWorkout();break;
     case 'restAdd':if(REST.endsAt){REST.endsAt+=(+d.s)*1000;REST.total=Math.max(5,REST.total+(+d.s));renderRest()}break;
     case 'restSkip':stopRest();break;
+    case 'exportData':exportData();break;
+    case 'importData':{const f=$('#f-import');if(f)f.click()}break;
   }
 });
 document.addEventListener('input',e=>{const el=e.target;const a=el.dataset.act;if(!a||!S.active)return;
   if(a==='setW'||a==='setR'){const s=S.active.ex[+el.dataset.i].sets[+el.dataset.j];const v=el.value===''?null:(a==='setW'?parseFloat(el.value):parseInt(el.value));if(a==='setW')s.w=isNaN(v)?null:v;else s.r=isNaN(v)?null:v;queueSaveActive()}
 });
-document.addEventListener('change',e=>{const el=e.target;const a=el.dataset.act;if(a==='setTime'){S.settings.time=el.value||'18:00';saveSettings();renderPlan();renderHome()}if(a==='setBefore'){S.settings.before=+el.value;saveSettings();renderHome()}});
+document.addEventListener('change',e=>{const el=e.target;const a=el.dataset.act;if(a==='importFile'){if(el.files&&el.files[0])importData(el.files[0]);el.value='';return}if(a==='setTime'){S.settings.time=el.value||'18:00';saveSettings();renderPlan();renderHome()}if(a==='setBefore'){S.settings.before=+el.value;saveSettings();renderHome()}});
 document.querySelectorAll('.tab').forEach(b=>b.addEventListener('click',()=>switchTab(b.dataset.tab)));
 document.addEventListener('keydown',e=>{if(e.key==='Escape')closeSheet()});
 document.addEventListener('securitypolicyviolation',e=>{if(/youtube/.test(e.blockedURI||'')&&!S.videoBlocked){S.videoBlocked=true;document.querySelectorAll('.video iframe').forEach(f=>{const ex=Object.values(EX).find(x=>f.src.includes(x.video));if(ex)f.parentElement.outerHTML=videoHTML(ex)})}});
