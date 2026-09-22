@@ -1,0 +1,16 @@
+{
+  "name": "Kỷ Luật Gym",
+  "short_name": "Kỷ Luật",
+  "description": "Lịch tập, thư viện bài tập có video, ghi set/rep và đồng hồ nghỉ.",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0A0E19",
+  "theme_color": "#0A0E19",
+  "lang": "vi",
+  "icons": [
+    {"src": "icon-192.png", "sizes": "192x192", "type": "image/png"},
+    {"src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable"}
+  ]
+}
